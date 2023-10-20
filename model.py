@@ -1,60 +1,44 @@
+import pickle
 import pandas as pd
-
-melbourne_data = pd.read_csv('melb_data.csv')
-
-filtered_melbourne_data = melbourne_data.dropna(axis=0)
-
-y = filtered_melbourne_data.Price
-
-melbourne_features = ['Rooms', 'Bathroom', 'Landsize', 'BuildingArea', 
-                        'YearBuilt', 'Lattitude', 'Longtitude']
-
-X = filtered_melbourne_data[melbourne_features]
-
-from sklearn.tree import DecisionTreeRegressor
-
-#melbourne_model = DecisionTreeRegressor()
-#melbourne_model.fit(X,y)
-
-from sklearn.metrics import mean_absolute_error
-#predicted_home_prices = melbourne_model.predict(X)
-
+import numpy as np
 from sklearn.model_selection import train_test_split
-train_X, val_X, train_y, val_y = train_test_split(X, y, random_state = 0)
-
-'''
-melbourne_model.fit(train_X,train_y)
-val_predictions = melbourne_model.predict(val_X)
-print(mean_absolute_error(val_y,val_predictions))
-'''
-
-def get_mae(max_leaf_nodes , train_X , val_X, train_y, val_y):
-    model = DecisionTreeRegressor(max_leaf_nodes=max_leaf_nodes , random_state=0)
-    model.fit(train_X,train_y)
-    preds_value = model.predict(val_X)
-    mae = mean_absolute_error(val_y,preds_value)
-    return (mae)
-
-
-candidate_nodes = [5, 25, 50, 100, 250, 500]
-scores = {leaf_size : get_mae(leaf_size,train_X , val_X, train_y, val_y) for leaf_size in candidate_nodes}
-best_tree_size = min(scores,key=scores.get)
-print(best_tree_size)
-
-best_model = DecisionTreeRegressor(max_leaf_nodes = best_tree_size)
-best_model.fit(X,y) # since we know the best size , we can work upon the whole dataset
-val_preds = best_model.predict(val_X)
-print(mean_absolute_error(val_y,val_preds)) #minimum absolute error
-
-
-'''
-#random forest
-
 from sklearn.ensemble import RandomForestRegressor
-forest_model = RandomForestRegressor(random_state=1)
-forest_model.fit(train_X, train_y)
-melb_preds = forest_model.predict(val_X)
-print(mean_absolute_error(val_y, melb_preds))
+from sklearn.metrics import mean_absolute_error , mean_squared_error
 
-'''
 
+prices_data = pd.read_csv('melb_data.csv')
+
+data = prices_data.drop(["Suburb" , "Address" , "SellerG" , "Date" , "CouncilArea" , "Regionname", "BuildingArea" , 'Method' , 'Propertycount', 'Type'] , axis=1)
+
+from sklearn.impute import SimpleImputer
+imputer_mode = SimpleImputer(strategy='most_frequent')
+
+data['YearBuilt'] = imputer_mode.fit_transform(data[['YearBuilt']])
+data['Car'] = imputer_mode.fit_transform(data[['Car']])
+
+
+
+
+# categorial_cols = ['Type'  ]
+
+# cleaned_data = pd.get_dummies(data,columns=categorial_cols)
+
+#splitting the data
+y = data['Price']
+X = data.drop('Price' , axis=1)
+
+model = RandomForestRegressor(n_estimators=50)
+model.fit(X, y)
+
+
+# try:
+#   
+# except UnicodeDecodeError:
+#   print('UnicodeDecodeError: XGBoost does not support Unicode strings in Python 2. Please use Python 3 or set the `XGB_FORCE_JSON_VALUE` environment variable to `1`.')
+
+# import xgboost as xgb
+# model = xgb.XGBRegressor()
+# model.fit(X, y)
+
+pickle.dump(model,open('Forest_model.pkl','wb'))
+#pickle.dump(model,open('XG_model.pkl','wb'))
