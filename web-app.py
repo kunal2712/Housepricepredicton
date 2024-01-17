@@ -3,7 +3,7 @@ import pickle
 
 
 Forest_model = pickle.load(open('Forest_model.pkl','rb'))
-#XG_model = pickle.load(open('XG_model.pkl','rb'))
+XG_model = pickle.load(open('XG_model.pkl','rb'))
 
 
 
